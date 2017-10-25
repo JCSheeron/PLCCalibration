@@ -1,0 +1,10 @@
+# ignore the bin, lib, and share directories -- they are for the virtual environment
+bin/
+lib/
+share/
+
+# ignore other stuff for the virtual environment
+lib64
+pyvenv.cfg
+
+

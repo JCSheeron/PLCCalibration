@@ -20,7 +20,8 @@
             0.0,
             50.0,
             90.0
-        ]
+        ],
+        "08_notes": "calibration notes"
     },
     {
         "01_instName": "Instrument B",
@@ -47,6 +48,7 @@
             0.0,
             50.0,
             90.0
-        ]
+        ],
+        "08_notes": "calibration notes"
     }
 ]
