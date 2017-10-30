@@ -24,6 +24,9 @@
 # 06_actCounts:     [c1, ... cn] (list of ints)
 # 07_actEus:        [e1, ... en] (list of reals)
 # 08_notes:         string
+# 09_Equipment:     string
+# 10 docTitle:      string
+#
 # where actCounts and actEus should be the same length
 
 # Command line paraemters are:
@@ -77,7 +80,9 @@ not in the [] notation.\n
   '05_minMaxEu': (0.0, 100.0),
   '06_actCounts': [1265, 12093, 26989],
   '07_actEus': [0.0, 50.0, 90.0],
-  '08_notes': 'calibration notes'},
+  '08_notes': 'calibration notes',
+  '09_equipment': 'equipment notes',
+  '10_docTitle': 'Document Title'},
  {'01_instName': 'Instrument B',
   '02_calDate': '10/5/2017 12:10',
   '03_EuUnits': 'units',
@@ -85,7 +90,9 @@ not in the [] notation.\n
   '05_minMaxEu': (-100.0, 100.0),
   '06_actCounts': [1265, 5209, 10093, 22345, 26989],
   '07_actEus': [-90.0, -50.0, 0.0, 50.0, 90.0],
-  '08_notes': 'calibration notes'}]\n
+  '08_notes': 'calibration notes',
+  '09_equipment': 'equipment notes',
+  '10_docTitle': 'Document Title'}]\n
   NOTE: The key values must not be modified.
   NOTE: The minMaxCounts and miunMaxEU are tuples, while the \
 actCounts and actEus are lists and should be the same length as each other.\
@@ -134,7 +141,9 @@ if (args.c and args.outputFilePrefix != ''):
               '05_minMaxEu': (0.0, 100.0),
               '06_actCounts': [1265, 12093, 26989],
               '07_actEus': [0.0, 50.0, 90.0],
-              '08_notes': 'calibration notes'},
+              '08_notes': 'calibration notes',
+              '09_equipment': 'equipment notes',
+              '10_docTitle': 'Document Title'},
              {'01_instName': 'Instrument B',
               '02_calDate': '10/5/2017 12:10',
               '03_EuUnits': 'units',
@@ -142,7 +151,9 @@ if (args.c and args.outputFilePrefix != ''):
               '05_minMaxEu': (-100.0, 100.0),
               '06_actCounts': [1265, 5209, 10093, 22345, 26989],
               '07_actEus': [-90.0, -50.0, 0.0, 50.0, 90.0],
-              '08_notes': 'calibration notes'}]
+              '08_notes': 'calibration notes',
+              '09_equipment': 'equipment notes',
+              '10_docTitle': 'Document Title'}]
     with open(args.outputFilePrefix, 'w') as outfile:
         json.dump(calData, outfile, sort_keys=True, indent= 4)
         outfile.close()
@@ -186,10 +197,23 @@ for instr in calData:
 
     # Unpack the dictionary entry into into NumPy
     # friendly datatypes and local variables
+    # verify notes, equipment, and doc title are present. Treat them as
+    # optional
+    if '10_docTitle' in instr:
+        docTitle= instr['10_docTitle']
+    else:
+        docTitle= instr['01_instName'] + ' Calibration'
     InstName= instr['01_instName']
     EuUnitsLabel= instr['03_EuUnits']
     calDate= instr['02_calDate']
-    calNotes= instr['08_notes']
+    if '08_notes' in instr:
+        calNotes= instr['08_notes']
+    else:
+        calNotes= ''
+    if '09_equipment' in instr:
+        equipNotes= instr['09_equipment']
+    else:
+        equipNotes= ''
 
     # **** Get Min and Max values for EU and counts.
     # Counts would be integers, except making them floats allows
@@ -283,10 +307,14 @@ for instr in calData:
     # file.
     if args.outputFilePrefix != '' or args.v:
         fname = args.outputFilePrefix + '_' + InstName + '.txt'
-        outputMsg = '*' * 78 + '\n'
+        outputMsg = '*' * 72 + '\n'
+        outputMsg += 'Traveler Number _____________________________________________________\n\n'
+        outputMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
+        outputMsg += docTitle + '\n\n'
         outputMsg += 'Nominal and Actual Calibration Data\n'
         outputMsg += InstName + '\n'
         outputMsg += calDate + '\n\n'
+        outputMsg += 'Equipment Used: ' + equipNotes + '\n\n'
         outputMsg += 'NOTE: ' + calNotes + '\n\n'
         outputMsg +='{:37} {:9d} {:9d}\n' \
                 .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
@@ -304,9 +332,9 @@ for instr in calData:
         outputMsg += '\nThe least squares fit 1 degree polynomial (line) is:'
         outputMsg += str(empPoly) + '\n\n'
 
-        outputMsg +='Calibrated engineering units for the min and max \
-PLC counts are as follows:\n'
-        outputMsg +='EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
+        outputMsg += 'Calibrated engineering units for the min and max \n'
+        outputMsg += 'PLC counts are as follows:\n'
+        outputMsg += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
                 .format(empMinMax[0], empMinMax[1])
         outputMsg += 'Compensate for a non-zero count value at zero EU.\n'
         outputMsg += 'Shift the curve fit up or down by the count value of \n'
@@ -327,7 +355,9 @@ for the adjusted counts is:'
         outputMsg += 'min and max PLC counts are as follows:\n'
         outputMsg += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n' \
                 .format(offsetMinMax[0], offsetMinMax[1])
-        outputMsg +='*' * 78 + '\n'
+        outputMsg += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
+        outputMsg += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
+        outputMsg +='*' * 72 + '\n'
 
         # output to a file if the -o option is used
         if args.outputFilePrefix != '':

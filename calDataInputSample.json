@@ -21,7 +21,9 @@
             50.0,
             90.0
         ],
-        "08_notes": "calibration notes"
+        "08_notes": "calibration notes",
+        "09_equipment": "equipment notes",
+        "10_docTitle": "Document Title"
     },
     {
         "01_instName": "Instrument B",
@@ -49,6 +51,8 @@
             50.0,
             90.0
         ],
-        "08_notes": "calibration notes"
+        "08_notes": "calibration notes",
+        "09_equipment": "equipment notes",
+        "10_docTitle": "Document Title"
     }
 ]
