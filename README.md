@@ -22,4 +22,7 @@ Python program which takes in calibration input data in the form of a json file,
   input file. The program will check for their existence before trying to use
   them.  If they are not present, then it will continue without them.
 
+* Added a place to enter traveler number, traveler operations(s), and traveler
+  page(s) at the top of the text output file. Similarly, added a place for mfg
+  and QA sign/data at the bottom of the text output file.
 

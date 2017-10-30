@@ -1,7 +1,17 @@
-******************************************************************************
+************************************************************************
+Traveler Number _____________________________________________________
+
+Traveler Operation(s) _______________  Traveler Page(s) _____________
+
+Document Title
+
 Nominal and Actual Calibration Data
 Instrument A
 10/5/2017 12:10
+
+Equipment Used: equipment notes
+
+NOTE: calibration notes
 
 Min and Max PLC Nominal Counts:               0     32767
 Min and Max Nominal EU (units):            0.00    100.00 
@@ -15,7 +25,8 @@ _______________   ______________________________
 The least squares fit 1 degree polynomial (line) is: 
 0.003449 x + 0.2753
 
-Calibrated engineering units for the min and max PLC counts are as follows:
+Calibrated engineering units for the min and max 
+PLC counts are as follows:
 EU at min and max PLC Counts:       0.2753      113.3028
 
 Compensate for a non-zero count value at zero EU.
@@ -35,4 +46,13 @@ The least squares fit 1 degree polynomial (line) for the adjusted counts is:
 Calibrated engineering units for the adjusted 
 min and max PLC counts are as follows:
 EU at min and max PLC Counts:      -0.0007      113.0268
-******************************************************************************
+
+
+
+Mfg Sign/Date  __________________________________________________
+
+
+QA Sign/Date   __________________________________________________
+
+
+************************************************************************
