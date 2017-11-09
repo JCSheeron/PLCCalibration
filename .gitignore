@@ -6,5 +6,5 @@ share/
 # ignore other stuff for the virtual environment
 lib64
 pyvenv.cfg
-
+activate
 
