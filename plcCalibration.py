@@ -447,7 +447,10 @@ for the adjusted counts is:'
                    format='pdf', transparent=False, frameon=False,
                    bbox_inches='tight', pad_inches=0.25)
 
-    # draw the plot if the -v option is set
+    # Draw the plot if the -v option is set. The user will close the plot.
+    # Otherwise close the plot so it no longer consumes memory
     if args.v:
         plt.show()
+    else:
+        plt.close()
 
