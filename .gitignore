@@ -3,6 +3,9 @@ bin/
 lib/
 share/
 
+# ignore auto created *.orig files (created by vim)
+*.orig
+
 # ignore other stuff for the virtual environment
 lib64
 pyvenv.cfg

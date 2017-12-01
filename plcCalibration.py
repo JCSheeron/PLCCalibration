@@ -195,7 +195,7 @@ with open(args.inputFileName, 'r') as infile:
 # with one list entry per instrument.
 for instr in calData:
 
-    # Unpack the dictionary entry into into NumPy
+    # **** Unpack the dictionary entry into into NumPy
     # friendly datatypes and local variables
     # verify notes, equipment, and doc title are present. Treat them as
     # optional
@@ -214,6 +214,9 @@ for instr in calData:
         equipNotes= instr['09_equipment']
     else:
         equipNotes= ''
+
+    # Print a user friendly message showing what instrument is being processed
+    print('Processing ' + InstName)
 
     # **** Get Min and Max values for EU and counts.
     # Counts would be integers, except making them floats allows
@@ -307,7 +310,7 @@ for instr in calData:
     # file.
     if args.outputFilePrefix != '' or args.v:
         fname = args.outputFilePrefix + '_' + InstName + '.txt'
-        outputMsg = '*' * 72 + '\n'
+        outputMsg = '*' * 70 + '\n'
         outputMsg += 'Traveler Number _____________________________________________________\n\n'
         outputMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
         outputMsg += docTitle + '\n\n'
@@ -357,7 +360,7 @@ for the adjusted counts is:'
                 .format(offsetMinMax[0], offsetMinMax[1])
         outputMsg += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
         outputMsg += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
-        outputMsg +='*' * 72 + '\n'
+        outputMsg +='*' * 70 + '\n'
 
         # output to a file if the -o option is used
         if args.outputFilePrefix != '':
