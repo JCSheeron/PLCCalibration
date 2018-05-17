@@ -10,4 +10,8 @@ share/
 lib64
 pyvenv.cfg
 activate
+pip-selfcheck.json
+
+# compiled python cache
+__pycache__/
 
