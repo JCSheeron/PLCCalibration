@@ -26,3 +26,17 @@ Python program which takes in calibration input data in the form of a json file,
   page(s) at the top of the text output file. Similarly, added a place for mfg
   and QA sign/data at the bottom of the text output file.
 
+* TODO: (target in pdfOutput branch): Change cal data from a text file to a pdf
+  file so data is harder to change. Merge this with the exiting pdf created by
+  matplot lib, so there is one pdf output file with all info.
+
+* TODO: (target in pdfOutput branch): Change command line arguments: Get rid of 
+  -i and -o "options", and make them positional.
+
+* TODO: (target in pdfOutput branch): Have a command line option (-d or --degree)
+  that specified the degree of the polynomial used to curve fit the data. Default
+  should be 1 for a 1 degree (linear) polynomial.
+
+* TODO: (target in pdfOutput branch): Have some indication of error, or linearity 
+  of curve fit.
+
