@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Linear regression
+# plcCalibration
 # This program accepts two or more engineering units (EU) vs count values, and
 # determines a linear curve fit to the given values.  Outputs are:
 # the measured counts and the measured EU values (given as inputs),
@@ -9,7 +9,9 @@
 # The calculated EU min and max at the min and max PLC counts.
 
 # A curve fit is performed for the measured values. Plotted along with the
-# measured points is the nominal line, and the curve fit line.
+# measured points is the nominal line, and the curve fit line. The curve fit is
+# done according to the degree of the resulting polynomial specified with the
+# -d/--degree option. Default is degree 1 (linear).
 
 # The input values are taken from a file specified with the -i or
 # --inputFileName paraemeter.  The input file is expected to be a single
@@ -30,15 +32,18 @@
 # where actCounts and actEus should be the same length
 
 # Command line paraemters are:
-# -i, --inputFileName (required). The name of the file where the calibration
-# data is stored (i.e. the file where the above dictionary is defined.
+# inputFileName (required, first positional). The name of the file where the
+# calibration data is stored (i.e. the file where the above dictionary is defined.
 #
-# -o, --outputFilePrefix. The prefix of the output file where information
-# about the calibration is written. The instrument is appended to the specified
-# output file name.  Also used as a file name when creating an input file
-# tmeplate.
+# outputFilePrefix (reqiured, second positional). The prefix of the output file
+# where information about the calibration is written. The instrument is
+# appended to the specified output file name.  Also used as a file name when
+# creating an input file tmeplate.
 #
-# -s, --simulate (optional) input count values are ignored, and count values
+# --degree (optional, default value = 1) The degree polynomial to use. The 
+# default value of 1 creates a 1 degree, linear polynomial.
+#
+# --simulate (optional) input count values are ignored, and count values
 # are simulated from the give EU values. Some random 'noise' is added to the
 # simulated count values.
 #
@@ -48,7 +53,12 @@
 #
 # -verbose (optional) sends the same info going to the output file to the
 # screen.
-
+#
+# Libraries used:
+# deepcopy, argparse
+# numpy (1.15.3), scipy (1.1.0), matplotlib (3.0.0)
+# json
+#
 # imports
 from copy import deepcopy
 
@@ -99,21 +109,35 @@ actCounts and actEus are lists and should be the same length as each other.\
 """
 
 descrStr="Linear curve fit of measured calibration data (EU vs counts)."
+
+# define the type definition function for the degree argument option
+# degree must be an integer >= 1
+# Accept anything convertable to an integer, but also make sure it is >= 1
+def intDegree(degArg):
+    value=int(degArg)
+    if not isinstance(value, int) or value < 1:
+        msg = "The --degree argument, value %r, is not an integer >=1" % degArg
+        raise argparse.ArgumentTypeError(msg)
+    return value
+
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
                                  description=descrStr,
                                  epilog=eplStr)
-parser.add_argument('-i', '--inputFileName', default='', \
+parser.add_argument('inputFileName', default='', \
                     help='Input file containing calibration data as a \
 single dictionary {} or list of dictionaries [{}, ... {}]')
-parser.add_argument('-o', '--outputFilePrefix', default='', \
+parser.add_argument('outputFilePrefix', default='', \
                     help= 'Output file prefix where calibration data and \
 plot are saved.  The created file names will be this prefix appended with an \
 underscore(_) and the instrument name. The calibration data filename will \
 end in .txt, and the plot will be saved as a pdf and the filename will \
 end in .pdf.')
-parser.add_argument('-s', '--simulate',  action='store_true', default=False, \
-                    help='Ignore given count values and simulate (noisy) \
-count values at given EU values.')
+parser.add_argument('--degree', default=1, type=intDegree, \
+                    metavar='', help='Polynomial degree used to \
+curve fit the data. Default value is 1 for linear curve fit.')
+parser.add_argument('--simulate', action='store_true', default=False, \
+                    help='Ignore given count values \
+and simulate (noisy) count values at given EU values.')
 parser.add_argument('-c', action='store_true', default=False, \
                     help='Create an input file to use as a template. Uses \
 the file name specified with the -o or outputFilePrefix option.')
@@ -126,10 +150,13 @@ args = parser.parse_args()
 # At this point, the arguments will be:
 # Argument          Values      Description
 # args.c            True/False  Create a template input file
+# args.degree       integers    Polynomial degree
 # args.inputFileName    string  file to get cal data from
 # args.outputFilePreix  string  file to write cal data to
 # args.simulate     True/False  Simulate count values 
 # args.v            True/False  Print calibratoin data to the terminal
+
+print("Degree: %r" % args.degree)
 
 # **** Create an input template file if the -c argument was specified.
 # The -o filename also needs to be specified. Once done, exit either way.
@@ -159,14 +186,14 @@ if (args.c and args.outputFilePrefix != ''):
         outfile.close()
     quit()
 elif(args.c and args.outputFilePrefix == ''):
-    print('Must specify an output file name (-o filename) when using \
+    print('An output file name must be specified when using \
 the create template (-c) option.')
     quit()
 
 # *** Check for an input file.  It is required in all cases except for the
 # template creation option handled above.
 if args.inputFileName == '':
-    print('An input file name must be specified with (-i or inputFileName)')
+    print('An input file name must be specified.')
     quit()
 
 # **** Read from the specified input file
