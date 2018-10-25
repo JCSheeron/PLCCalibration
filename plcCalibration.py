@@ -444,7 +444,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     plt.title(InstName + '    ' + calDate, fontsize=12, fontweight='bold')
     ax.set_xlabel('counts')
     ax.set_ylabel('Engineering Units (EU)\n' + EuUnitsLabel)
-
+    
     # make additional room for the labels
     plt.subplots_adjust(left=0.18, bottom=0.18)
     # plot horizontal and vertical lines at zero
@@ -455,7 +455,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     # plot the measurments as points
     ax.plot(actCounts, actEus, color='blue', \
             linewidth=1.0, linestyle='', \
-            markersize=2.8, marker='x', label='meas.')
+            markersize=2.5, marker='x', label='meas.')
     # plot the nominal line
     ax.plot(nomCounts, nomEus, color='green', \
             linewidth=1.0, linestyle='-', marker='', label='nominal')
@@ -465,21 +465,45 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     # plot the offset curve fit line
     ax.plot(nomCounts, offsetLine, color='orange', \
             linewidth=1.0, linestyle='-', marker='', label='offset')
-    # plot the errors at the measured points
-    ax.plot(actCounts, empErrors, color='red', \
-            linewidth=1.0, linestyle='', \
-            markersize=2.8, marker='x', label='error')
-    # annotate (label) each error marker with the error value
+
+    # The errors are plotted as individual points below, but this will create
+    # multiple legend entries if we are not careful.... so....
+    # Plot "dummy" error points, so a single legend entry is made for each error
+    # type (+/-), then draw the legend, then plot the real error points.
+    #
+    # Make a dummy +/- error point
+    ax.plot([], [], color='red', \
+                    linewidth=1.0, linestyle='', \
+                    markersize=1.5, marker='^', label='+ error')
+    ax.plot([], [], color='red', \
+                    linewidth=1.0, linestyle='', \
+                    markersize=1.5, marker='v', label='- error')
+
+    # Everything we want represented on the legend is plotted now, so make the legend
+    ax.legend(loc='upper left', bbox_to_anchor=(0.0, 1.0), ncol=3, frameon=True)
+
+    # plot each error marker and annotate each with the error value
     # for each coord of a error marker, place an annotation with an offset
+    # plot negative and positve errors seperately so they can use "up" or "down"
+    # symbols.
+    #
     # create a text style
     txStyle = dict(fontsize=6, color='gray', horizontalalignment='center')
+    # plot an annotate the error points
     for c,e in zip(actCounts, empErrors):
-        ax.annotate('{:0.4G}'.format(e), xy=(c,e), xytext=(0,-8),
-                   textcoords='offset points', **txStyle)
+        if e < 0:
+            ax.plot(c, e, color='red', \
+                    linewidth=1.0, linestyle='', \
+                    markersize=1.5, marker='v', label='error')
+            ax.annotate('{:0.4G}'.format(e), xy=(c,e), xytext=(0,-8),
+                        textcoords='offset points', **txStyle)
+        else: # treat 0 error (unlikely) as positive
+            ax.plot(c, e, color='red', \
+                    linewidth=1.0, linestyle='', \
+                    markersize=1.5, marker='^', label='error')
+            ax.annotate('{:0.4G}'.format(e), xy=(c,e), xytext=(0,-8),
+                        textcoords='offset points', **txStyle)
     
-
-    # set the legend
-    ax.legend(loc='upper left', frameon=True)
 
     # Set axis limits. Extend a bit past the min/max values
     # Consider the nominal and actual when determining min/max limits.
@@ -497,8 +521,16 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     plt.ylim(axEuMin - (euRange * 0.05), \
              axEuMax + (euRange * 0.05))
 
-    # set x and y ticks
+    # print the polynomial in the lower left of the graph, offset a
+    # bit from (count min, eu min)
+    txStyle = dict(fontsize=8, color='black', horizontalalignment='left')
+    ax.text(axCountsMin + (0.01 * countRange),
+            axEuMin + (-0.04 * euRange),
+            'EU='+ polyPrettyPrint(coeffs), **txStyle)
 
+    
+    # set x and y ticks
+    #
     # create a two line x-axis labeling with the counts on the top and the 
     # percentages on the bottom
     # first get the values (counts)

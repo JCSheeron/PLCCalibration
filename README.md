@@ -99,7 +99,7 @@ json
   the nominal, emperical, and offset lines so they all show completely on the 
   plot.
 
-22 October 2018
+25 October 2018
 
 * Made the -i/--inputFileName a positional required argument (1st position)
   rather than an optional (required) argument.
@@ -121,8 +121,12 @@ json
     -- The scales now take into account the nominal and actual
        range of values for counts and EU, as well as the calculated error values.
     -- The plot now includes the error (variance between measured and calc'd EU)
-       at each of the measured points.
-    -- Added annotations to show error values offset from the error marker
+       at each of the measured points.  Use up/down trianges to symbolize deltas
+       for +/- errors.
+    -- Added annotations to show error values offset from the error markers.
+    -- Updated legend to show error markers, and updated layout to be less 
+       obtrusive by making 3 columns.
+    -- Added a text annotation of the polynomial on the graph
 
 * Added the --degree command line argument and associated functionality,
 so a degree other than 1, the default, can be specified. The resulting curve
