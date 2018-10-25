@@ -8,7 +8,7 @@ The calculated EU min and max at the min and max PLC counts.
 A curve fit is performed for the measured values. Plotted along with the
 measured points is the nominal line, and the curve fit line. The curve fit is
 done according to the degree of the resulting polynomial specified with the
--d/--degree option. Default is degree 1 (linear).
+--degree option. Default is degree 1 (linear).
 
 The input values are taken from a file specified with the -i or
 --inputFileName paraemeter.  The input file is expected to be a single
@@ -37,10 +37,10 @@ where information about the calibration is written. The instrument is
 appended to the specified output file name.  Also used as a file name when
 creating an input file tmeplate.
 
--d, --degree (optional, default value = 1) The degree polynomial to use. The 
+--degree (optional, default value = 1) The degree polynomial to use. The 
 default value of 1 creates a 1 degree, linear polynomial.
 
--s, --simulate (optional) input count values are ignored, and count values
+--simulate (optional) input count values are ignored, and count values
 are simulated from the give EU values. Some random 'noise' is added to the
 simulated count values.
 

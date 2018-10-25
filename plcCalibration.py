@@ -73,6 +73,11 @@ import matplotlib.pyplot as plt # for plotting
 # read and write in JSON format
 import json
 
+# user libraries
+# Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
+# on the location of the imported files
+from bpsMath import oomFloor, oomCeil, polyPrettyPrint
+
 # **** argument parsing
 # define the arguments
 # create an epilog string to further describe the input file
@@ -155,8 +160,6 @@ args = parser.parse_args()
 # args.outputFilePreix  string  file to write cal data to
 # args.simulate     True/False  Simulate count values 
 # args.v            True/False  Print calibratoin data to the terminal
-
-print("Degree: %r" % args.degree)
 
 # **** Create an input template file if the -c argument was specified.
 # The -o filename also needs to be specified. Once done, exit either way.
@@ -255,7 +258,6 @@ for instr in calData:
     actEus = np.array(instr['07_actEus'], dtype=np.float32)
     actCounts = np.array(instr['06_actCounts'], dtype=np.int32)
 
-
     # **** Simulate count values for given EU values if the -s or --simulate
     # option is specified.
     # Create count values based on actual EU values.
@@ -292,13 +294,17 @@ for instr in calData:
     nomEus = np.interp(nomCounts, minMaxCounts, minMaxEu)
 
     # **** Curve fit the empirical data
-    # Curve fit the empirical data to a 1 degree polynomial (a line)
+    # Curve fit the empirical data to a polynomial of the degree specified.
     # polyfit returns the coefficients (highest power first)
     # given the data set and a degree
-    coeffs = polyfit(actCounts, actEus, 1)
+    coeffs = polyfit(actCounts, actEus, args.degree)
+    # Get the calc values and errors at the measured (emperical) points
+    calcVals= np.polyval(coeffs, actCounts) 
+    empErrors = calcVals - actEus
     # get a polynomial object so we can print it, and so we can get the roots
     # and compensate for a count offset below
     empPoly = np.poly1d(coeffs)
+    empPolyDegree = empPoly.order
     # make a curve fit line which spans the nominal count values 
     empLine = polyval(coeffs, nomCounts)
     # get curve fit values at count min/max
@@ -307,23 +313,29 @@ for instr in calData:
     # **** Compensate for a non-zero count at zero EU, which is essentially the
     # x-intercept of the EU axis.  Get the offset, and apply it to the measured
     # count values, and curve fit to get a new formula.
-    # Create a 1 dimensional polynomial object, and get the roots. Since this
-    # is a single degree polynomial (a line) the root will be a scalar (a
-    # single value). The root is the value of x (counts) where Y (EU) is zero.
+    # Create a 1 dimensional polynomial object, and get the roots. If the degree
+    # (--degree option) of the polynomial is 1, the root will be a scalar (a
+    # single value). 
+    # If the degree of the polynomial is > 1, there are more than 1 root. Assume
+    # root closest to zero (the others may be wild!) is the one we want. 
+    # In both these cases, the root is the value of x (counts) where Y (EU) is zero.
     countOffset = (empPoly).roots
+    # if degree is one, count offset is a single value, and can be used directly.
+    # Otherwise, find the root closest to zero and use it.
+    if args.degree > 1:
+        idx = (np.abs(countOffset)).argmin()
+        countOffset = countOffset[idx] # root closest to zero
+
     # Shift the measured count values by this offset.
-    # NOTE: This works because we are using a 1 degree poly fit, and the root
-    # is a scalar (single value). Something else may be needed for more
-    # complicated curves.
+    # NOTE: This works because the code above takes into account the polynomial
+    # degree, and makes sure we have a single root at this point.
     offsetCounts = (np.round(actCounts - countOffset,
                     decimals=0)).astype(np.int32)
-    # make a curve fit for the new line. This is a bit heavy-handed, since this
-    # could be done by adjusting count values, and not doing an additional
-    # curve fit, but I am doing this as it may be of benefit if we ever need
-    # more complicated polynomials as well (degrees > 1), but
-    # the roots would not be scalar, so the offset Al Gore rhythm would be
-    # different.
-    offsetCoeffs = polyfit(offsetCounts, actEus, 1)
+    # Make a curve fit for the new line. This is a bit heavy-handed for lines 
+    # (one degree polynomials), since this could be done by adjusting count
+    # values, and not doing an additional curve fit, but do this so it handles
+    # the higher degree polynomial cases.
+    offsetCoeffs = polyfit(offsetCounts, actEus, args.degree)
     # get a polynomial object so we can print it
     offsetPoly = np.poly1d(offsetCoeffs)
     # make a new line using the new offset curve fit. Span the nominal counts.
@@ -352,6 +364,7 @@ for instr in calData:
         outputMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
                 .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
                         minMaxEu[0], minMaxEu[1])
+        # Measured counts vs Measured EU table
         outputMsg +='{:16}  {:30}\n'.format('Measured Counts', \
                                     'Measured EU (' + EuUnitsLabel + ')')
         outputMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
@@ -359,10 +372,27 @@ for instr in calData:
         for idx in range(actCounts.size):
             outputMsg +='{: <16d}  {: <30.2f}\n'.format(actCounts[idx], \
                                                           actEus[idx])
-        outputMsg += '\nThe least squares fit 1 degree polynomial (line) is:'
-        outputMsg += str(empPoly) + '\n\n'
-
-        outputMsg += 'Calibrated engineering units for the min and max \n'
+        outputMsg += '\nThe least squares fit {:d} degree polynomial is:\n' \
+                    .format(empPolyDegree)
+        outputMsg += polyPrettyPrint(coeffs) + '\n\n'
+        # Measured EU vs Calc EU vs Error table
+        outputMsg +='{:11}  {:11}  {:23}\n'.format('Measured EU', \
+                                                  'Calc''d EU', \
+                                                  'Error    % of EU Range')
+        outputMsg +='{:11}  {:11}  {:23}\n'.format('_' * 11, '_' * 11, '_' * 23)
+        # loop thru the counts and print a list of counts vs eu values and %error
+        # calc eu range so it can be used to calc error pct
+        euRange = minMaxEu[1] - minMaxEu[0]
+        for idx in range(actCounts.size):
+            # calc error and pct error
+            error= empErrors[idx]
+            errorPct = (error / euRange) * 100.0
+            outputMsg +='{: <11.2f}  {: <11.2f}  {: >8.3f}   {: >8.3f}%\n' \
+                                                            .format(actEus[idx], 
+                                                                   calcVals[idx],
+                                                                   error,
+                                                                   errorPct)
+        outputMsg += '\nCalibrated engineering units for the min and max \n'
         outputMsg += 'PLC counts are as follows:\n'
         outputMsg += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
                 .format(empMinMax[0], empMinMax[1])
@@ -370,6 +400,7 @@ for instr in calData:
         outputMsg += 'Shift the curve fit up or down by the count value of \n'
         outputMsg += 'the zero EU value (the x-intercept of EU axis).\n'
         outputMsg += 'The adjusted count values vs EU values are:\n\n'
+        # Adjusted counts vs Measured EU table
         outputMsg +='{:16}  {:30}\n'.format('Adjusted Counts', \
                                     'Measured EU (' + EuUnitsLabel + ')')
         outputMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
@@ -377,9 +408,9 @@ for instr in calData:
         for idx in range(actCounts.size):
             outputMsg +='{: <16d}  {: <30.2f}\n'.format(offsetCounts[idx], \
                                                         actEus[idx])
-        outputMsg += '\nThe least squares fit 1 degree polynomial (line) \
-for the adjusted counts is:'
-        outputMsg += str(offsetPoly) + '\n\n'
+        outputMsg += '\nThe least squares fit {:d} degree polynomial \
+for the adjusted counts is:\n'.format(empPolyDegree)
+        outputMsg += polyPrettyPrint(offsetCoeffs) + '\n\n'
 
         outputMsg += 'Calibrated engineering units for the adjusted \n'
         outputMsg += 'min and max PLC counts are as follows:\n'
@@ -416,6 +447,9 @@ for the adjusted counts is:'
 
     # make additional room for the labels
     plt.subplots_adjust(left=0.18, bottom=0.18)
+    # plot horizontal and vertical lines at zero
+    plt.axhline(0, color='black', linewidth = 0.5) 
+    plt.axvline(0, color='black', linewidth = 0.5) 
 
     # add the data to the plot
     # plot the measurments as points
@@ -431,43 +465,54 @@ for the adjusted counts is:'
     # plot the offset curve fit line
     ax.plot(nomCounts, offsetLine, color='orange', \
             linewidth=1.0, linestyle='-', marker='', label='offset')
+    # plot the errors at the measured points
+    ax.plot(actCounts, empErrors, color='red', \
+            linewidth=1.0, linestyle='', \
+            markersize=2.8, marker='x', label='error')
 
     # set the legend
     ax.legend(loc='upper left', frameon=True)
 
-    # set axis limits. Extend a bit past the min/max values
-    countRange = (minMaxCounts[1] - minMaxCounts[0])
-    euRange = (minMaxEu[1] - minMaxEu[0])
-    plt.xlim(minMaxCounts[0] - (countRange * 0.05), \
-             minMaxCounts[1] + (countRange * 0.05))
+    # Set axis limits. Extend a bit past the min/max values
+    # Consider the nominal and actual when determining min/max limits.
+    # Use oomFloor and oomCeil to "auto scale" the axes, rounding up 
+    # and down to the next boundry value in the same order of magnatude
+    axCountsMin = oomFloor(min(minMaxCounts[0], np.amin(actCounts)))
+    axCountsMax = oomCeil(max(minMaxCounts[1], np.amax(actCounts)))
+    axEuMin = oomFloor(min(minMaxEu[0], np.amin(actEus), np.amin(empErrors)))
+    axEuMax = oomCeil(max(minMaxEu[1], np.amax(actEus), np.amax(empErrors)))
+    countRange = (axCountsMax - axCountsMin)
+    euRange = (axEuMax - axEuMin)
+    plt.xlim(axCountsMin - (countRange * 0.05), \
+             axCountsMax + (countRange * 0.05))
 
-    plt.ylim(minMaxEu[0] - (euRange * 0.05), \
-             minMaxEu[1] + (euRange * 0.05))
+    plt.ylim(axEuMin - (euRange * 0.05), \
+             axEuMax + (euRange * 0.05))
 
     # set x and y ticks
 
     # create a two line x-axis labeling with the counts on the top and the 
     # percentages on the bottom
     # first get the values (counts)
-    xAxVals=np.linspace(minMaxCounts[0], minMaxCounts[1], 5, endpoint = True)
+    xAxVals=np.linspace(axCountsMin, axCountsMax, 5, endpoint = True)
     # force the x axis value to be integers
     xAxValss=xAxVals.astype(np.int32)
     # then use list comprehension to get corresponding percentages
-    xAxPct=[(((x - minMaxCounts[0]) / countRange) * 100) for x in xAxVals]
+    xAxPct=[(((x - axCountsMin) / countRange) * 100) for x in xAxVals]
     # now append them into a string
     xAxLabels=[]
     for idx in range(len(xAxVals)):
         xAxLabels.append(str(xAxVals[idx]) + '\n' + str(xAxPct[idx]) + '%')
 
     plt.setp(ax, \
-            xticks=(np.linspace(minMaxCounts[0], \
-                    minMaxCounts[1], 5, endpoint = True)),
+            xticks=(np.linspace(axCountsMin, \
+                    axCountsMax, 5, endpoint = True)),
             xticklabels=xAxLabels,
-            yticks=(np.linspace(minMaxEu[0], minMaxEu[1], 9, endpoint = True)))
+            yticks=(np.linspace(axEuMin, axEuMax, 9, endpoint = True)))
 
 
     # show the grid
-    ax.grid(b=True, which='both', linestyle='-.')
+    ax.grid(b=True, which='both', linewidth=0.5, linestyle='-.')
 
     # Save the plot if the outFilePrefix is not empty. If it is empty, don't
     # save the plot.
