@@ -81,21 +81,21 @@ json
   page(s) at the top of the text output file. Similarly, added a place for mfg
   and QA sign/data at the bottom of the text output file.
 
-* TODO: (target in pdfOutput branch): Change cal data from a text file to a pdf
+* TODO: Change cal data from a text file to a pdf
   file so data is harder to change. Merge this with the exiting pdf created by
   matplot lib, so there is one pdf output file with all info.
 
-* TODO: (target in pdfOutput branch): Change command line arguments: Get rid of 
+* TODO: Change command line arguments: Get rid of 
   -i and -o "options", and make them positional.
 
-* TODO: (target in pdfOutput branch): Have a command line option (-d or --degree)
+* TODO: Have a command line option (-d or --degree)
   that specified the degree of the polynomial used to curve fit the data. Default
   should be 1 for a 1 degree (linear) polynomial.
 
-* TODO: (target in pdfOutput branch): Have some indication of error, or linearity 
+* TODO: Have some indication of error, or linearity 
   of curve fit.
 
-* TODO: (target in pdfOutput branch): Have plot axis auto scaling take into account
+* TODO: Have plot axis auto scaling take into account
   the nominal, emperical, and offset lines so they all show completely on the 
   plot.
 
@@ -114,3 +114,23 @@ json
   numpy went to version 1.15.3 from 1.13.3
   scipy went to version 1.1.0 from 1.0.0
   matplotlib went to version 3.0.0 from 2.1.0
+
+* Plot improvements:  
+    -- Used user bpsMath library oomCeil and oomFloor functions to help
+       autoscale the plot.
+    -- The scales now take into account the nominal and actual
+       range of values for counts and EU, as well as the calculated error values.
+    -- The plot now includes the error (variance between measured and calc'd EU)
+       at each of the measured points.
+    -- Added annotations to show error values offset from the error marker
+
+* Added the --degree command line argument and associated functionality,
+so a degree other than 1, the default, can be specified. The resulting curve
+fit will be a polynomial with the specified degree.
+
+* Used user bpsMath library polyPrettyPrint to print the polynomial
+resulting from the curve fit in the output text as a prettier (better formatted)
+ascii string.
+
+* Added a table to the output text that shows measured EU vs calc EU
+and the resulting error in EU values as as a percent of EU range.

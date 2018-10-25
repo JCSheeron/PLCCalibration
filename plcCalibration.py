@@ -469,6 +469,14 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     ax.plot(actCounts, empErrors, color='red', \
             linewidth=1.0, linestyle='', \
             markersize=2.8, marker='x', label='error')
+    # annotate (label) each error marker with the error value
+    # for each coord of a error marker, place an annotation with an offset
+    # create a text style
+    txStyle = dict(fontsize=6, color='gray', horizontalalignment='center')
+    for c,e in zip(actCounts, empErrors):
+        ax.annotate('{:0.4G}'.format(e), xy=(c,e), xytext=(0,-8),
+                   textcoords='offset points', **txStyle)
+    
 
     # set the legend
     ax.legend(loc='upper left', frameon=True)
