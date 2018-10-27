@@ -52,11 +52,15 @@ option.
 screen.
 
 Libraries used:
-deepcopy, argparse
+deepcopy
+argparse -- cli arg parser
 numpy (1.15.3), scipy (1.1.0), matplotlib (3.0.0)
-json
+json -- read and write JSON
+-- pdf creation and merging
+pyfpdf (fpdf)
+PyPdf2
 
-25 Oct 2017
+25 Oct 2017 (v0.1)
 * Change the executable python program from linearRegress.py to plcCalibration.py
 
 * Add a calibration note section to the input file, the output text file, and
@@ -99,7 +103,7 @@ json
   the nominal, emperical, and offset lines so they all show completely on the 
   plot.
 
-25 October 2018
+25 October 2018 (v0.2)
 
 * Made the -i/--inputFileName a positional required argument (1st position)
   rather than an optional (required) argument.
@@ -138,3 +142,11 @@ ascii string.
 
 * Added a table to the output text that shows measured EU vs calc EU
 and the resulting error in EU values as as a percent of EU range.
+
+26 October 2018 (v0.3)
+* Changed calibration data to be a pdf rather than a plain text *.txt file.
+
+* Merged the plot pdf at the end of the calibration data pdf (new), so now,
+only a single file is created, and it is a pdf.
+
+

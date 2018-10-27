@@ -55,9 +55,13 @@
 # screen.
 #
 # Libraries used:
-# deepcopy, argparse
+# deepcopy
+# argparse -- cli arg parser
 # numpy (1.15.3), scipy (1.1.0), matplotlib (3.0.0)
-# json
+# json -- read and write JSON
+# -- pdf creation and merging
+# pyfpdf (fpdf)
+# PyPdf2
 #
 # imports
 from copy import deepcopy
@@ -69,9 +73,15 @@ import argparse
 from scipy import stats, polyval, polyfit
 import numpy as np
 import matplotlib.pyplot as plt # for plotting
+import matplotlib.font_manager as fontmgr # for managing fonts
 
 # read and write in JSON format
 import json
+
+# pdf creation
+from fpdf import FPDF
+# pdf manipulation
+import PyPDF2
 
 # user libraries
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
@@ -344,11 +354,10 @@ for instr in calData:
     offsetMinMax = polyval(offsetCoeffs, minMaxCounts)
 
     # **** Create string to write to the terminal or a file depending on the -v
-    # and -o arguments. 
-    # outputFilePrefix is not empty. If it is empty, then don't write to a
-    # file.
+    # argument, or if the outputFilePrefix is not empty.
+    # If it is empty, then don't write to a file.
     if args.outputFilePrefix != '' or args.v:
-        fname = args.outputFilePrefix + '_' + InstName + '.txt'
+        fname = args.outputFilePrefix + '_' + InstName + '.pdf'
         outputMsg = '*' * 70 + '\n'
         outputMsg += 'Traveler Number _____________________________________________________\n\n'
         outputMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
@@ -420,13 +429,73 @@ for the adjusted counts is:\n'.format(empPolyDegree)
         outputMsg += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
         outputMsg +='*' * 70 + '\n'
 
-        # output to a file if the -o option is used
-        if args.outputFilePrefix != '':
-            outFile = open(fname, 'a+')
-            outFile.write(outputMsg)
-            outFile.close()
+        # output to a file if there is an output file specified
+        # if args.outputFilePrefix != '':
+        #     outFile = open(fname, 'a+')
+        #     outFile.write(outputMsg)
+        #     outFile.close()
 
-        # output to the terminal if the -v option is used
+        # Write output to a pdf file if there is an output file specified
+        if args.outputFilePrefix != '':
+            # Want to use a monospace font so the tables look good, 
+            # but we need to see if they exist. In order of preference, try
+            # source code pro, then DejaVuSansMono, then default to courier
+            # 
+            # Flag to signal the font is set
+            fontSet = False
+            # Get a font list
+            fonts= fontmgr.findSystemFonts()
+            # Find and use SourceCodePro if it is found
+            fontShortName= 'SourceCodePro-Regular-ttf'
+            # generator returning an iterable being accessed with next
+            # This will spit out the path to the font install location 
+            # if it is installed, or come back with None.
+            fontFullName= next((font for font in fonts if fontShortName in font), None)
+            if fontFullName is not None:
+                # source code pro is installed. Use it.
+                # TODO: add source code pro font to pdf
+                fontSet = True
+            if not fontSet:
+                # try DejaVu
+                fontShortName= 'DejaVuSansMono.ttf'
+                fontFullName= next((font for font in fonts if fontShortName in font), None)
+                if fontFullName is not None:
+                    # deja vu sans mono is installed. Use it.
+                    # TODO: add deja vu sans mono font to pdf
+                    fontSet= True
+            if not fontSet:
+                # default to Courier
+                # TODO: add deja vu sans mono font to pdf
+                pass # place holder. TODO: remove
+
+            # Extend the FPDF class to add a header and a footer
+            class cPdf(FPDF):
+                # define the page header
+                def header(self):
+                    self.set_font('Mono', 'B', 10)
+                    self.cell(20, 20, InstName + ' Calibration Data')
+                    self.ln(20) # line break
+
+                # define the page footer
+                def footer(self):
+                    # position off the bottom
+                    self.set_y(-20)
+                    self.set_font('Mono', 'I', 10)
+                    # print page number 
+                    self.cell(20, 0, 'Page ' + str(self.page_no()) + ' of {nb}')
+
+            # instantiate the new class and get on with making hte pdf
+            pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter')
+            # add desired font if it exists
+            pdf.add_font(family='Mono', style='', fname='DejaVuSansMono.ttf', uni=True)
+            # define the nb alias for total page numbers used in footer 
+            pdf.alias_nb_pages()
+            pdf.add_page() # use ctor params
+            pdf.set_font('Mono', '', 10)
+            pdf.multi_cell(w=0, h=13, txt=outputMsg, border=0, align='L', fill=False )
+            pdf.output(name = fname, dest='F') 
+        
+        # Output to the terminal if the -v option is used
         if args.v:
             print(outputMsg)
 
@@ -556,11 +625,11 @@ for the adjusted counts is:\n'.format(empPolyDegree)
 
     # Save the plot if the outFilePrefix is not empty. If it is empty, don't
     # save the plot.
-    if args.outputFilePrefix != '':
-        fname= args.outputFilePrefix + '_' + InstName + '.pdf'
-        plt.savefig(fname, orientation='portrait', papertype='letter',
-                   format='pdf', transparent=False, frameon=False,
-                   bbox_inches='tight', pad_inches=0.25)
+    # if args.outputFilePrefix != '':
+    #     fname= args.outputFilePrefix + '_' + InstName + '.pdf'
+    #     plt.savefig(fname, orientation='portrait', papertype='letter',
+    #                format='pdf', transparent=False, frameon=False,
+    #                bbox_inches='tight', pad_inches=0.25)
 
     # Draw the plot if the -v option is set. The user will close the plot.
     # Otherwise close the plot so it no longer consumes memory
