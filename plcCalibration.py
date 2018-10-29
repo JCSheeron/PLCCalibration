@@ -55,7 +55,8 @@
 # screen.
 #
 # Libraries used:
-# deepcopy
+# copy -- for copying elements
+# os -- file delete
 # argparse -- cli arg parser
 # numpy (1.15.3), scipy (1.1.0), matplotlib (3.0.0)
 # json -- read and write JSON
@@ -65,6 +66,8 @@
 #
 # imports
 from copy import deepcopy
+
+import os # file delete
 
 # import arg parser
 import argparse
@@ -81,7 +84,7 @@ import json
 # pdf creation
 from fpdf import FPDF
 # pdf manipulation
-import PyPDF2
+from PyPDF2 import PdfFileMerger, PdfFileReader
 
 # user libraries
 # Note: May need PYTHONPATH (set in ~/.profile?) to be set depending
@@ -357,38 +360,39 @@ for instr in calData:
     # argument, or if the outputFilePrefix is not empty.
     # If it is empty, then don't write to a file.
     if args.outputFilePrefix != '' or args.v:
-        fname = args.outputFilePrefix + '_' + InstName + '.pdf'
-        outputMsg = '*' * 70 + '\n'
-        outputMsg += 'Traveler Number _____________________________________________________\n\n'
-        outputMsg += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
-        outputMsg += docTitle + '\n\n'
-        outputMsg += 'Nominal and Actual Calibration Data\n'
-        outputMsg += InstName + '\n'
-        outputMsg += calDate + '\n\n'
-        outputMsg += 'Equipment Used: ' + equipNotes + '\n\n'
-        outputMsg += 'NOTE: ' + calNotes + '\n\n'
-        outputMsg +='{:37} {:9d} {:9d}\n' \
+        fnameData= '__zzqq__plcCalData.pdf' # not likely to exist and be something else
+        # **** Page 1
+        outputMsgp1 = '*' * 70 + '\n'
+        outputMsgp1 += 'Traveler Number _____________________________________________________\n\n'
+        outputMsgp1 += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
+        outputMsgp1 += docTitle + '\n\n'
+        outputMsgp1 += 'Nominal and Actual Calibration Data\n'
+        outputMsgp1 += InstName + '\n'
+        outputMsgp1 += calDate + '\n\n'
+        outputMsgp1 += 'Equipment Used: ' + equipNotes + '\n\n'
+        outputMsgp1 += 'NOTE: ' + calNotes + '\n\n'
+        outputMsgp1 +='{:37} {:9d} {:9d}\n' \
                 .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
                                                     minMaxCounts[1])
-        outputMsg += '{:37} {:9.2f} {:9.2f} \n\n' \
+        outputMsgp1 += '{:37} {:9.2f} {:9.2f} \n\n' \
                 .format('Min and Max Nominal EU (' + EuUnitsLabel + '): ', \
                         minMaxEu[0], minMaxEu[1])
         # Measured counts vs Measured EU table
-        outputMsg +='{:16}  {:30}\n'.format('Measured Counts', \
+        outputMsgp1 +='{:16}  {:30}\n'.format('Measured Counts', \
                                     'Measured EU (' + EuUnitsLabel + ')')
-        outputMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+        outputMsgp1 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsg +='{: <16d}  {: <30.2f}\n'.format(actCounts[idx], \
+            outputMsgp1 +='{: >14d}  {: >30.2f}\n'.format(actCounts[idx], \
                                                           actEus[idx])
-        outputMsg += '\nThe least squares fit {:d} degree polynomial is:\n' \
+        outputMsgp1 += '\nThe least squares fit {:d} degree polynomial is:\n' \
                     .format(empPolyDegree)
-        outputMsg += polyPrettyPrint(coeffs) + '\n\n'
+        outputMsgp1 += polyPrettyPrint(coeffs) + '\n\n'
         # Measured EU vs Calc EU vs Error table
-        outputMsg +='{:11}  {:11}  {:23}\n'.format('Measured EU', \
+        outputMsgp1 +='{:>11}  {:>11}  {:^23}\n'.format('Measured EU', \
                                                   'Calc''d EU', \
-                                                  'Error    % of EU Range')
-        outputMsg +='{:11}  {:11}  {:23}\n'.format('_' * 11, '_' * 11, '_' * 23)
+                                                  '  Error   % of EU Range')
+        outputMsgp1 +='{:11}  {:11}  {:23}\n'.format('_' * 11, '_' * 11, '_' * 23)
         # loop thru the counts and print a list of counts vs eu values and %error
         # calc eu range so it can be used to calc error pct
         euRange = minMaxEu[1] - minMaxEu[0]
@@ -396,104 +400,180 @@ for instr in calData:
             # calc error and pct error
             error= empErrors[idx]
             errorPct = (error / euRange) * 100.0
-            outputMsg +='{: <11.2f}  {: <11.2f}  {: >8.3f}   {: >8.3f}%\n' \
+            outputMsgp1 +='{: >11.2f}  {: >11.2f}  {: >8.3f}   {: >8.3f}%\n' \
                                                             .format(actEus[idx], 
                                                                    calcVals[idx],
                                                                    error,
                                                                    errorPct)
-        outputMsg += '\nCalibrated engineering units for the min and max \n'
-        outputMsg += 'PLC counts are as follows:\n'
-        outputMsg += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
+        outputMsgp1 += '\nCalibrated engineering units for the min and max \n'
+        outputMsgp1 += 'PLC counts are as follows:\n'
+        outputMsgp1 += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
                 .format(empMinMax[0], empMinMax[1])
-        outputMsg += 'Compensate for a non-zero count value at zero EU.\n'
-        outputMsg += 'Shift the curve fit up or down by the count value of \n'
-        outputMsg += 'the zero EU value (the x-intercept of EU axis).\n'
-        outputMsg += 'The adjusted count values vs EU values are:\n\n'
+        # **** Page 2
+        outputMsgp2 = 'Compensate for a non-zero count value at zero EU.\n'
+        outputMsgp2 += 'Shift the curve fit up or down by the count value of \n'
+        outputMsgp2 += 'the zero EU value (the x-intercept of EU axis).\n'
+        outputMsgp2 += 'The adjusted count values vs EU values are:\n\n'
         # Adjusted counts vs Measured EU table
-        outputMsg +='{:16}  {:30}\n'.format('Adjusted Counts', \
+        outputMsgp2 +='{:16}  {:30}\n'.format('Adjusted Counts', \
                                     'Measured EU (' + EuUnitsLabel + ')')
-        outputMsg +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
+        outputMsgp2 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsg +='{: <16d}  {: <30.2f}\n'.format(offsetCounts[idx], \
+            outputMsgp2 +='{: <16d}  {: <30.2f}\n'.format(offsetCounts[idx], \
                                                         actEus[idx])
-        outputMsg += '\nThe least squares fit {:d} degree polynomial \
+        outputMsgp2 += '\nThe least squares fit {:d} degree polynomial \
 for the adjusted counts is:\n'.format(empPolyDegree)
-        outputMsg += polyPrettyPrint(offsetCoeffs) + '\n\n'
+        outputMsgp2 += polyPrettyPrint(offsetCoeffs) + '\n\n'
 
-        outputMsg += 'Calibrated engineering units for the adjusted \n'
-        outputMsg += 'min and max PLC counts are as follows:\n'
-        outputMsg += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n' \
+        outputMsgp2 += 'Calibrated engineering units for the adjusted \n'
+        outputMsgp2 += 'min and max PLC counts are as follows:\n'
+        outputMsgp2 += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n' \
                 .format(offsetMinMax[0], offsetMinMax[1])
-        outputMsg += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
-        outputMsg += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
-        outputMsg +='*' * 70 + '\n'
+        outputMsgp2 += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
+        outputMsgp2 += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
+        outputMsgp2 +='*' * 70 + '\n'
 
-        # output to a file if there is an output file specified
-        # if args.outputFilePrefix != '':
-        #     outFile = open(fname, 'a+')
-        #     outFile.write(outputMsg)
-        #     outFile.close()
-
-        # Write output to a pdf file if there is an output file specified
+        # **** Write output to a pdf file if there is an output file specified
         if args.outputFilePrefix != '':
-            # Want to use a monospace font so the tables look good, 
-            # but we need to see if they exist. In order of preference, try
-            # source code pro, then DejaVuSansMono, then default to courier
-            # 
-            # Flag to signal the font is set
-            fontSet = False
-            # Get a font list
-            fonts= fontmgr.findSystemFonts()
-            # Find and use SourceCodePro if it is found
-            fontShortName= 'SourceCodePro-Regular-ttf'
-            # generator returning an iterable being accessed with next
-            # This will spit out the path to the font install location 
-            # if it is installed, or come back with None.
-            fontFullName= next((font for font in fonts if fontShortName in font), None)
-            if fontFullName is not None:
-                # source code pro is installed. Use it.
-                # TODO: add source code pro font to pdf
-                fontSet = True
-            if not fontSet:
-                # try DejaVu
-                fontShortName= 'DejaVuSansMono.ttf'
-                fontFullName= next((font for font in fonts if fontShortName in font), None)
-                if fontFullName is not None:
-                    # deja vu sans mono is installed. Use it.
-                    # TODO: add deja vu sans mono font to pdf
-                    fontSet= True
-            if not fontSet:
-                # default to Courier
-                # TODO: add deja vu sans mono font to pdf
-                pass # place holder. TODO: remove
-
-            # Extend the FPDF class to add a header and a footer
+            # **** Begin Class Dfn
+            # Extend the FPDF class to add a header and a footer. 
+            # This class also contains a tuple of font names (fontNames) that can be
+            # compared with the default font names (defaultFontNames). 
+            # If non-default fonts are used, they must first be added using add_font().
+            # If default font names are used, an add_font() call results in an error.
             class cPdf(FPDF):
+                def __init__(self, orientation, unit, format):
+                    
+                    # init the base FPDF
+                    super().__init__(orientation=orientation, unit=unit, format=format)
+                    # define a tuple holding default font names
+                    # (regular mono, bold mono, regular proportional, bold proportional)
+                    # These are intended to be safe (read: always installed) fonts.
+                    self.defaultFontNames= ("Courier", "Courier", "Helvetica", "Helvetica")
+
+                   # Init the desired font names in a tuple
+                    # Get a font list
+                    fontList= fontmgr.findSystemFonts()
+                    self.fontNames= self.getFontNames(fontList)
+                    # Add non-default font names. Explicitly adding a default
+                    # font is an error.
+                    if self.fontNames[0] != self.defaultFontNames[0]:
+                        self.add_font(family="regularMono", style='',
+                                    fname=self.fontNames[0], uni=True)
+                    if self.fontNames[1] != self.defaultFontNames[1]:
+                        self.add_font(family="boldMono", style='',
+                                    fname=self.fontNames[1], uni=True)
+                    if self.fontNames[2] != self.defaultFontNames[2]:
+                        self.add_font(family="regularProp", style='',
+                                    fname=self.fontNames[2], uni=True)
+                    if self.fontNames[3] != self.defaultFontNames[3]:
+                        self.add_font(family="boldProp", style='',
+                                    fname=self.fontNames[3], uni=True)
+
                 # define the page header
                 def header(self):
-                    self.set_font('Mono', 'B', 10)
-                    self.cell(20, 20, InstName + ' Calibration Data')
+                    # use the bold proportional font
+                    if self.fontNames[3] != self.defaultFontNames[3]:
+                        # non-default
+                        self.set_font("boldProp", '', 10)
+                    else:
+                        # default
+                        self.set_font(self.defaultFontNames[3], 'B', 10)
+                    self.cell(20, -40, InstName + ' Calibration Data')
                     self.ln(20) # line break
 
                 # define the page footer
                 def footer(self):
+                    # use the regular proportional font
+                    if self.fontNames[2] != self.defaultFontNames[2]:
+                        # non-default
+                        self.set_font("regularProp", '', 10)
+                    else:
+                        # default
+                        self.set_font(self.defaultFontNames[2], '', 10)
                     # position off the bottom
-                    self.set_y(-20)
-                    self.set_font('Mono', 'I', 10)
-                    # print page number 
-                    self.cell(20, 0, 'Page ' + str(self.page_no()) + ' of {nb}')
+                    self.set_y(-40)
+                    # print page number
+                    # hard code 3 total pages, since plot gets appended
+                    # after the data pdf is created
+                    self.cell(20, 0, 'Page ' + str(self.page_no()) + ' of 3')
 
-            # instantiate the new class and get on with making hte pdf
+                # Create a function which, given a font list, 
+                # returns a tuple of font names for 4 fonts:
+                # (regular mono, bold mono, regular prop, bold prop)
+                def getFontNames(self, fontList):
+                    # Want to use a monospace font for the body text,
+                    # so the tables look good, but a proportional spaced font
+                    # for the headings. For non-standard fonts, it cannot be 
+                    # assumed they are installed. In order of preference, try
+                    # source code pro, then DejaVuSansMono, then default to
+                    # Courier, which comes with pyfpdf.
+                    # For the porportional fonts, use Helvetica, which comes
+                    # with pyfpdf.
+                    #
+                    # Assume a list of avialable fonts is passed in.
+                    # *** Regular Mono Style
+                    fontShortName= 'SourceCodePro-Regular.ttf'
+                    # generator returning an iterable being accessed with next
+                    # This will return the path to the font install location 
+                    # if it is installed, or come back with None.
+                    regularMonoName= next((font for font in fontList if fontShortName in font), None)
+                    if regularMonoName is None:
+                        # source code pro is not installed.
+                        # try DejaVu
+                        fontShortName= 'DejaVuSansMono.ttf'
+                        regularMonoName= next((font for font in fontList if fontShortName in font), None)
+                    if regularMonoName is None:
+                        # DejaVu Sans Mono not installed. 
+                        # default to Courier
+                        regularMonoName= 'Courier'
+                    # *** Bold Mono Style
+                    fontShortName= 'SourceCodePro-Bold.ttf'
+                    # This will return the path to the font install location 
+                    # if it is installed, or come back with None.
+                    boldMonoName= next((font for font in fontList if fontShortName in font), None)
+                    if boldMonoName is None:
+                        # source code pro is not installed.
+                        # try DejaVu
+                        fontShortName= 'DejaVuSansMono-Bold.ttf'
+                        boldMonoName= next((font for font in fontList if fontShortName in font), None)
+                    if boldMonoName is None:
+                        # DejaVu Sans Mono Bold not installed. 
+                        # default to Courier
+                        boldMonoName= 'Courier'
+                    # *** Regular Proportional Style
+                    regularPropName= 'Helvetica'
+                    boldPropName= 'Helvetica'
+
+                    # return the tuple of font names
+                    return(regularMonoName, boldMonoName, regularPropName, boldPropName)
+            # **** End Class Dfn
+
+
+            # Instantiate the new class and get on with making the pdf
+            # Units are in points (pt)
             pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter')
-            # add desired font if it exists
-            pdf.add_font(family='Mono', style='', fname='DejaVuSansMono.ttf', uni=True)
             # define the nb alias for total page numbers used in footer 
-            pdf.alias_nb_pages()
+            # pdf.alias_nb_pages() # {nb} not used, as total pages is hard coded
+            pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
+            #pdf.add_page() # use ctor params
+
+            # Set the font for the main content
+            # use the bold proportional font
+            if pdf.fontNames[0] != pdf.defaultFontNames[0]:
+                # non-default
+                pdf.set_font("regularMono", '', 10)
+            else:
+                # default
+                pdf.set_font(pdf.defaultFontNames[0], '', 10)
+
+            # add the content put into outputMsg above
             pdf.add_page() # use ctor params
-            pdf.set_font('Mono', '', 10)
-            pdf.multi_cell(w=0, h=13, txt=outputMsg, border=0, align='L', fill=False )
-            pdf.output(name = fname, dest='F') 
+            pdf.multi_cell(w=0, h=13, txt=outputMsgp1, border=0, align='L', fill=False )
+            pdf.add_page() # use ctor params
+            pdf.multi_cell(w=0, h=13, txt=outputMsgp2, border=0, align='L', fill=False )
+            pdf.output(name = fnameData, dest='F') 
         
         # Output to the terminal if the -v option is used
         if args.v:
@@ -623,13 +703,50 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     # show the grid
     ax.grid(b=True, which='both', linewidth=0.5, linestyle='-.')
 
+    # put page numbers (3 of 3) in the lower left
+    txStyle = dict(fontsize=8, color='black', horizontalalignment='left')
+    plt.text(0.05, 0, 'Page 3 of 3', transform=plt.gcf().transFigure, **txStyle)
+
     # Save the plot if the outFilePrefix is not empty. If it is empty, don't
     # save the plot.
-    # if args.outputFilePrefix != '':
-    #     fname= args.outputFilePrefix + '_' + InstName + '.pdf'
-    #     plt.savefig(fname, orientation='portrait', papertype='letter',
-    #                format='pdf', transparent=False, frameon=False,
-    #                bbox_inches='tight', pad_inches=0.25)
+    if args.outputFilePrefix != '':
+        fnamePlot= '__zzqq__plcCalPlot.pdf' # not likely to exist and be something else
+        try:
+            # not sure what the possible exceptions are. Take a guess, and raise
+            # in the 'generic' case
+            plt.savefig(fnamePlot, orientation='portrait', papertype='letter',
+                       format='pdf', transparent=False, frameon=False,
+                       bbox_inches='tight', pad_inches=0.25)
+        except IOError as ioe:
+            print('I/O error when saving the plot:')
+            print(ioe)
+        except:
+            print('Unexpcted error saving the plot: ', sys.exc_info()[0])
+            raise
+
+        # Now merge the plot pdf onto the end of the cal data pdf
+        merger= PdfFileMerger()
+        try:
+            fileData= open(fnameData, 'rb')
+            filePlot= open(fnamePlot, 'rb')
+            merger.append(PdfFileReader(fileData))
+            merger.append(PdfFileReader(filePlot))
+            fname = args.outputFilePrefix + '_' + InstName + '.pdf'
+            merger.write(fname)
+            filePlot.close()
+            fileData.close()
+            # delete the individual files
+            if os.path.exists(fnameData):
+                os.remove(fnameData)
+            if os.path.exists(fnamePlot):
+                os.remove(fnamePlot)
+
+        except IOError as ioe:
+            print('I/O error when merging the data and plot files:')
+            print(ioe)
+        except:
+            print('Unexpcted error merging the data and plot files: ', sys.exc_info()[0])
+            raise
 
     # Draw the plot if the -v option is set. The user will close the plot.
     # Otherwise close the plot so it no longer consumes memory

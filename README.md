@@ -52,7 +52,8 @@ option.
 screen.
 
 Libraries used:
-deepcopy
+copy -- for copying elements
+os -- file delete
 argparse -- cli arg parser
 numpy (1.15.3), scipy (1.1.0), matplotlib (3.0.0)
 json -- read and write JSON
