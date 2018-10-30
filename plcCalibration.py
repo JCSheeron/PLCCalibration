@@ -43,10 +43,6 @@
 # --degree (optional, default value = 1) The degree polynomial to use. The 
 # default value of 1 creates a 1 degree, linear polynomial.
 #
-# --simulate (optional) input count values are ignored, and count values
-# are simulated from the give EU values. Some random 'noise' is added to the
-# simulated count values.
-#
 # -c Create input file (optional). Creates a input file to be used as a
 # template.  Uses the file name specified with the -o or outpuFilePrefix
 # option.
@@ -153,9 +149,6 @@ end in .pdf.')
 parser.add_argument('--degree', default=1, type=intDegree, \
                     metavar='', help='Polynomial degree used to \
 curve fit the data. Default value is 1 for linear curve fit.')
-parser.add_argument('--simulate', action='store_true', default=False, \
-                    help='Ignore given count values \
-and simulate (noisy) count values at given EU values.')
 parser.add_argument('-c', action='store_true', default=False, \
                     help='Create an input file to use as a template. Uses \
 the file name specified with the -o or outputFilePrefix option.')
@@ -171,7 +164,6 @@ args = parser.parse_args()
 # args.degree       integers    Polynomial degree
 # args.inputFileName    string  file to get cal data from
 # args.outputFilePreix  string  file to write cal data to
-# args.simulate     True/False  Simulate count values 
 # args.v            True/False  Print calibratoin data to the terminal
 
 # **** Create an input template file if the -c argument was specified.
@@ -270,35 +262,6 @@ for instr in calData:
     # **** Get empirical (actual) values determined during calibration.
     actEus = np.array(instr['07_actEus'], dtype=np.float32)
     actCounts = np.array(instr['06_actCounts'], dtype=np.int32)
-
-    # **** Simulate count values for given EU values if the -s or --simulate
-    # option is specified.
-    # Create count values based on actual EU values.
-    if args.simulate:
-        # Generate some fake empirical data. Normally this will be
-        # entered up above. For the entered EU values generate some counts
-        # values based on the nominal slope and intercept, but include
-        # some noise as an artificial error.
-
-        # Use interp to interpolate count values given EU values.
-        # For this, the EU is the x-axis, and the counts are the y-axis
-        actCounts = np.interp(actEus, minMaxEu, minMaxCounts)
-        # and then randomize them a bit
-        for idx, actCount in enumerate(actCounts):
-             # make sure min < max
-            if actCount < 0:
-                # make sure min < max
-                actCounts[idx] = np.random.randint(actCount * 1.2, \
-                                                   actCount * 0.8)
-            elif actCount > 0:
-                actCounts[idx] = np.random.randint(actCount * 0.8, \
-                                                   actCount * 1.2)
-            else:
-                # at zero
-                actCounts[idx]= 0
-        # convert the counts back to integers. Round first just to be safe
-        actCounts=np.round(actCounts, decimals=0).astype(np.int32)
-    # **** End Simulate section
 
     # **** Generate nominal EU values
     # Generate some EU values at a hand full of count values between min/max
@@ -577,7 +540,8 @@ for the adjusted counts is:\n'.format(empPolyDegree)
         
         # Output to the terminal if the -v option is used
         if args.v:
-            print(outputMsg)
+            print(outputMsgp1)
+            print(outputMsgp2)
 
     # **** End writing to file or the terminal
     #

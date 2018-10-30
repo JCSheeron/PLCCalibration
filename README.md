@@ -40,10 +40,6 @@ creating an input file tmeplate.
 --degree (optional, default value = 1) The degree polynomial to use. The 
 default value of 1 creates a 1 degree, linear polynomial.
 
---simulate (optional) input count values are ignored, and count values
-are simulated from the give EU values. Some random 'noise' is added to the
-simulated count values.
-
 -c Create input file (optional). Creates a input file to be used as a
 template.  Uses the file name specified with the -o or outpuFilePrefix
 option.
@@ -144,10 +140,21 @@ ascii string.
 * Added a table to the output text that shows measured EU vs calc EU
 and the resulting error in EU values as as a percent of EU range.
 
-26 October 2018 (v0.3)
+30 October 2018 (v0.3)
 * Changed calibration data to be a pdf rather than a plain text *.txt file.
 
 * Merged the plot pdf at the end of the calibration data pdf (new), so now,
 only a single file is created, and it is a pdf.
 
+* Removed the --simulate functionality as I no longer saw a need.
 
+* HACK: TODO: Page number total is hard coded at 3.  This is because the 
+  curent mechanism to number the pages if via a footer in pyfpdf when the PDF 
+  is being created.  After the PDF is created with pyfpdf, it is 2 pages, so
+  the footer says Page 2 of 2 as expected.  After this, the plot is added as
+  a third page, and the header wold be out of date.  It is expected there will
+  always be 3 pages, so the hard coding works, but it is a hack.  A better way
+  to do the  page numbering would be to not use the pyfpdf footer, but to use
+  PyPDF2 to add the page numbers after the plot is added, or use the pyfpdf
+  footer, but add a dummy page for the plot, before the plot is merged, and 
+  than remove the dummy page.  Something like this anyway.
