@@ -1,0 +1,63 @@
+[
+    {
+        "01_instName": "Instrument A",
+        "02_calDate": "10/5/2017 12:10",
+        "03_EuUnits": "units",
+        "04_minMaxCounts": [
+            0,
+            32767.0
+        ],
+        "05_minMaxEu": [
+            0.0,
+            100.0
+        ],
+        "06_actCounts": [
+            0,
+            8191,
+            16383,
+            24574.9,
+            32766.98
+        ],
+        "07_actEus": [
+            0,
+            90.5,
+            128,
+            156.76,
+            181.01
+            
+        ],
+        "08_notes": "calibration notes",
+        "09_equipment": "equipment notes",
+        "10_docTitle": "Document Title"
+    },
+    {
+        "01_instName": "Instrument B",
+        "02_calDate": "10/5/2017 12:10",
+        "03_EuUnits": "units",
+        "04_minMaxCounts": [
+            -27648,
+            27648
+        ],
+        "05_minMaxEu": [
+            -100.0,
+            100.0
+        ],
+        "06_actCounts": [
+            1265,
+            5209,
+            10093,
+            22345,
+            26989
+        ],
+        "07_actEus": [
+            -90.0,
+            -50.0,
+            0.0,
+            50.0,
+            90.0
+        ],
+        "08_notes": "calibration notes",
+        "09_equipment": "equipment notes",
+        "10_docTitle": "Document Title"
+    }
+]
