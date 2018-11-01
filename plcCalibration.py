@@ -21,9 +21,9 @@
 # 01_instName:      string
 # 02_calDate:       string (MM/DD/YYYY HH:mm:ss)
 # 03_EuUnits:       string
-# 04_minMaxCounts:  list [min, max] Ints.
+# 04_minMaxCounts:  list [min, max] Reals or Ints that get converted to reals.
 # 05_minMaxEu:      list [min, max]. Reals
-# 06_actCounts:     [c1, ... cn] (list of ints)
+# 06_actCounts:     [c1, ... cn] (list of reals or ints that get converted to reals)
 # 07_actEus:        [e1, ... en] (list of reals)
 # 08_notes:         string
 # 09_Equipment:     string
@@ -254,19 +254,19 @@ for instr in calData:
     print('Processing ' + InstName)
 
     # **** Get Min and Max values for EU and counts.
-    # Counts would be integers, except making them floats allows
+    # Counts may be integers or floats. Making them floats allows
     # usage of the numpy.interp and other functions
-    minMaxEu = np.array(instr['05_minMaxEu'])
-    minMaxCounts = np.array(instr['04_minMaxCounts'])
+    minMaxEu = np.array(instr['05_minMaxEu'], dtype=np.float32)
+    minMaxCounts = np.array(instr['04_minMaxCounts'], dtype=np.float32)
 
     # **** Get empirical (actual) values determined during calibration.
     actEus = np.array(instr['07_actEus'], dtype=np.float32)
-    actCounts = np.array(instr['06_actCounts'], dtype=np.int32)
+    actCounts = np.array(instr['06_actCounts'], dtype=np.float32)
 
     # **** Generate nominal EU values
     # Generate some EU values at a hand full of count values between min/max
     # Interpolate given the min/max counts and EU values
-    nomCounts = np.linspace(minMaxCounts[0], minMaxCounts[1], 5, dtype=np.int32)
+    nomCounts = np.linspace(minMaxCounts[0], minMaxCounts[1], 5, dtype=np.float32)
     nomEus = np.interp(nomCounts, minMaxCounts, minMaxEu)
 
     # **** Curve fit the empirical data
@@ -305,8 +305,9 @@ for instr in calData:
     # Shift the measured count values by this offset.
     # NOTE: This works because the code above takes into account the polynomial
     # degree, and makes sure we have a single root at this point.
-    offsetCounts = (np.round(actCounts - countOffset,
-                    decimals=0)).astype(np.int32)
+    # offsetCounts = (np.round(actCounts - countOffset,
+                    # decimals=0)).astype(np.int32)
+    offsetCounts = actCounts - countOffset
     # Make a curve fit for the new line. This is a bit heavy-handed for lines 
     # (one degree polynomials), since this could be done by adjusting count
     # values, and not doing an additional curve fit, but do this so it handles
@@ -334,7 +335,7 @@ for instr in calData:
         outputMsgp1 += calDate + '\n\n'
         outputMsgp1 += 'Equipment Used: ' + equipNotes + '\n\n'
         outputMsgp1 += 'NOTE: ' + calNotes + '\n\n'
-        outputMsgp1 +='{:37} {:9d} {:9d}\n' \
+        outputMsgp1 +='{:37} {:9.2f} {:9.2f}\n' \
                 .format('Min and Max PLC Nominal Counts: ', minMaxCounts[0], \
                                                     minMaxCounts[1])
         outputMsgp1 += '{:37} {:9.2f} {:9.2f} \n\n' \
@@ -346,7 +347,7 @@ for instr in calData:
         outputMsgp1 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsgp1 +='{: >14d}  {: >30.2f}\n'.format(actCounts[idx], \
+            outputMsgp1 +='{: >14.2f}  {: >14.2f}\n'.format(actCounts[idx], \
                                                           actEus[idx])
         outputMsgp1 += '\nThe least squares fit {:d} degree polynomial is:\n' \
                     .format(empPolyDegree)
@@ -383,7 +384,7 @@ for instr in calData:
         outputMsgp2 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsgp2 +='{: <16d}  {: <30.2f}\n'.format(offsetCounts[idx], \
+            outputMsgp2 +='{: >14.2f}  {: >14.2f}\n'.format(offsetCounts[idx], \
                                                         actEus[idx])
         outputMsgp2 += '\nThe least squares fit {:d} degree polynomial \
 for the adjusted counts is:\n'.format(empPolyDegree)

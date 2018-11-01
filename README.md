@@ -18,9 +18,9 @@ Key               Datatype
 01_instName:      string
 02_calDate:       string (MM/DD/YYYY HH:mm:ss)
 03_EuUnits:       string
-04_minMaxCounts:  list [min, max] Ints.
+04_minMaxCounts:  list [min, max] Reals or Ints that get converted to reals.
 05_minMaxEu:      list [min, max]. Reals
-06_actCounts:     [c1, ... cn] (list of ints)
+06_actCounts:     [c1, ... cn] (list of reals or ints that get converted to reals)
 07_actEus:        [e1, ... en] (list of reals)
 08_notes:         string
 09_Equipment:     string
@@ -158,3 +158,6 @@ only a single file is created, and it is a pdf.
   PyPDF2 to add the page numbers after the plot is added, or use the pyfpdf
   footer, but add a dummy page for the plot, before the plot is merged, and 
   than remove the dummy page.  Something like this anyway.
+
+* (11/1/2018) Made minMaxXounts and actCounts accept real values. Previously, they
+  had to be integers.
