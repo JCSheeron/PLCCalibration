@@ -445,7 +445,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                         # default
                         self.set_font(self.defaultFontNames[3], 'B', 10)
                     self.cell(20, -40, InstName + ' Calibration Data')
-                    self.ln(20) # line break
+                    self.ln(10) # line break
 
                 # define the page footer
                 def footer(self):
@@ -534,9 +534,10 @@ for the adjusted counts is:\n'.format(empPolyDegree)
 
             # add the content put into outputMsg above
             pdf.add_page() # use ctor params
-            pdf.multi_cell(w=0, h=13, txt=outputMsgp1, border=0, align='L', fill=False )
-            pdf.add_page() # use ctor params
-            pdf.multi_cell(w=0, h=13, txt=outputMsgp2, border=0, align='L', fill=False )
+            #pdf.multi_cell(w=0, h=13, txt=outputMsgp1, border=0, align='L', fill=False )
+            #pdf.add_page() # use ctor params
+            #pdf.multi_cell(w=0, h=13, txt=outputMsgp2, border=0, align='L', fill=False )
+            pdf.multi_cell(w=0, h=13, txt=outputMsgp1+outputMsgp2, border=0, align='L', fill=False )
             pdf.output(name = fnameData, dest='F') 
         
         # Output to the terminal if the -v option is used
