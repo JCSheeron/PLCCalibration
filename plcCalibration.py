@@ -347,16 +347,16 @@ for instr in calData:
         outputMsgp1 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsgp1 +='{: >14.2f}  {: >14.2f}\n'.format(actCounts[idx], \
+            outputMsgp1 +='{: >14.2f}  {: >14.6f}\n'.format(actCounts[idx], \
                                                           actEus[idx])
         outputMsgp1 += '\nThe least squares fit {:d} degree polynomial is:\n' \
                     .format(empPolyDegree)
         outputMsgp1 += polyPrettyPrint(coeffs) + '\n\n'
         # Measured EU vs Calc EU vs Error table
-        outputMsgp1 +='{:>11}  {:>11}  {:^23}\n'.format('Measured EU', \
+        outputMsgp1 +='{:>14}  {:>14}  {:^23}\n'.format('Measured EU', \
                                                   'Calc''d EU', \
                                                   '  Error   % of EU Range')
-        outputMsgp1 +='{:11}  {:11}  {:23}\n'.format('_' * 11, '_' * 11, '_' * 23)
+        outputMsgp1 +='{:14}  {:14}  {:23}\n'.format('_' * 14, '_' * 14, '_' * 23)
         # loop thru the counts and print a list of counts vs eu values and %error
         # calc eu range so it can be used to calc error pct
         euRange = minMaxEu[1] - minMaxEu[0]
@@ -364,14 +364,14 @@ for instr in calData:
             # calc error and pct error
             error= empErrors[idx]
             errorPct = (error / euRange) * 100.0
-            outputMsgp1 +='{: >11.2f}  {: >11.2f}  {: >8.3f}   {: >8.3f}%\n' \
+            outputMsgp1 +='{: >14.6f}  {: >14.6f}  {: >11.6f}   {: >8.3f}%\n' \
                                                             .format(actEus[idx], 
                                                                    calcVals[idx],
                                                                    error,
                                                                    errorPct)
         outputMsgp1 += '\nCalibrated engineering units for the min and max \n'
         outputMsgp1 += 'PLC counts are as follows:\n'
-        outputMsgp1 += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n\n' \
+        outputMsgp1 += 'EU at min and max PLC Counts:  {:14.6f}   {:14.6f}\n\n' \
                 .format(empMinMax[0], empMinMax[1])
         # **** Page 2
         outputMsgp2 = 'Compensate for a non-zero count value at zero EU.\n'
@@ -384,7 +384,7 @@ for instr in calData:
         outputMsgp2 +='{:16}  {:30}\n'.format('_' * 15, '_' * 30)
         # loop thru the counts and print a list of counts vs eu values
         for idx in range(actCounts.size):
-            outputMsgp2 +='{: >14.2f}  {: >14.2f}\n'.format(offsetCounts[idx], \
+            outputMsgp2 +='{: >14.6f}  {: >14.6f}\n'.format(offsetCounts[idx], \
                                                         actEus[idx])
         outputMsgp2 += '\nThe least squares fit {:d} degree polynomial \
 for the adjusted counts is:\n'.format(empPolyDegree)
@@ -392,7 +392,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
 
         outputMsgp2 += 'Calibrated engineering units for the adjusted \n'
         outputMsgp2 += 'min and max PLC counts are as follows:\n'
-        outputMsgp2 += 'EU at min and max PLC Counts:  {:11.4f}   {:11.4f}\n' \
+        outputMsgp2 += 'EU at min and max PLC Counts:  {:14.6f}   {:14.6f}\n' \
                 .format(offsetMinMax[0], offsetMinMax[1])
         outputMsgp2 += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
         outputMsgp2 += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
