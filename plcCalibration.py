@@ -40,7 +40,7 @@
 # appended to the specified output file name.  Also used as a file name when
 # creating an input file tmeplate.
 #
-# --degree (optional, default value = 1) The degree polynomial to use. The 
+# --degree (optional, default value = 1) The degree polynomial to use. The
 # default value of 1 creates a 1 degree, linear polynomial.
 #
 # -c Create input file (optional). Creates a input file to be used as a
@@ -91,7 +91,7 @@ from bpsMath import oomFloor, oomCeil, polyPrettyPrint
 # define the arguments
 # create an epilog string to further describe the input file
 eplStr="""The format of the input file specified with the -i or inputFileName
-parameter should be a list of dictionaries, or a single dictionary. Below 
+parameter should be a list of dictionaries, or a single dictionary. Below
 shows the configuration as a list with two elements. The first element is a
 dictionary for 'Instrument A' and the second element is a dictionary for
 'Instrument B'. If only one instrument is being configured, the input file
@@ -275,13 +275,13 @@ for instr in calData:
     # given the data set and a degree
     coeffs = polyfit(actCounts, actEus, args.degree)
     # Get the calc values and errors at the measured (emperical) points
-    calcVals= np.polyval(coeffs, actCounts) 
+    calcVals= np.polyval(coeffs, actCounts)
     empErrors = calcVals - actEus
     # get a polynomial object so we can print it, and so we can get the roots
     # and compensate for a count offset below
     empPoly = np.poly1d(coeffs)
     empPolyDegree = empPoly.order
-    # make a curve fit line which spans the nominal count values 
+    # make a curve fit line which spans the nominal count values
     empLine = polyval(coeffs, nomCounts)
     # get curve fit values at count min/max
     empMinMax = polyval(coeffs, minMaxCounts)
@@ -291,9 +291,9 @@ for instr in calData:
     # count values, and curve fit to get a new formula.
     # Create a 1 dimensional polynomial object, and get the roots. If the degree
     # (--degree option) of the polynomial is 1, the root will be a scalar (a
-    # single value). 
+    # single value).
     # If the degree of the polynomial is > 1, there are more than 1 root. Assume
-    # root closest to zero (the others may be wild!) is the one we want. 
+    # root closest to zero (the others may be wild!) is the one we want.
     # In both these cases, the root is the value of x (counts) where Y (EU) is zero.
     countOffset = (empPoly).roots
     # if degree is one, count offset is a single value, and can be used directly.
@@ -308,7 +308,7 @@ for instr in calData:
     # offsetCounts = (np.round(actCounts - countOffset,
                     # decimals=0)).astype(np.int32)
     offsetCounts = actCounts - countOffset
-    # Make a curve fit for the new line. This is a bit heavy-handed for lines 
+    # Make a curve fit for the new line. This is a bit heavy-handed for lines
     # (one degree polynomials), since this could be done by adjusting count
     # values, and not doing an additional curve fit, but do this so it handles
     # the higher degree polynomial cases.
@@ -365,7 +365,7 @@ for instr in calData:
             error= empErrors[idx]
             errorPct = (error / euRange) * 100.0
             outputMsgp1 +='{: >14.6f}  {: >14.6f}  {: >11.6f}   {: >8.3f}%\n' \
-                                                            .format(actEus[idx], 
+                                                            .format(actEus[idx],
                                                                    calcVals[idx],
                                                                    error,
                                                                    errorPct)
@@ -394,21 +394,19 @@ for the adjusted counts is:\n'.format(empPolyDegree)
         outputMsgp2 += 'min and max PLC counts are as follows:\n'
         outputMsgp2 += 'EU at min and max PLC Counts:  {:14.6f}   {:14.6f}\n' \
                 .format(offsetMinMax[0], offsetMinMax[1])
-        outputMsgp2 += '\n\n\nMfg Sign/Date  ' + '_' * 50 + '\n\n\n'
-        outputMsgp2 += 'QA Sign/Date   ' + '_' * 50 + '\n\n\n'
+        outputMsgp2 += '\n\n\nENGMfg Sign/date  ' + '_' * 50 + '\n\n\n'
         outputMsgp2 +='*' * 70 + '\n'
 
         # **** Write output to a pdf file if there is an output file specified
         if args.outputFilePrefix != '':
             # **** Begin Class Dfn
-            # Extend the FPDF class to add a header and a footer. 
+            # Extend the FPDF class to add a header and a footer.
             # This class also contains a tuple of font names (fontNames) that can be
-            # compared with the default font names (defaultFontNames). 
+            # compared with the default font names (defaultFontNames).
             # If non-default fonts are used, they must first be added using add_font().
             # If default font names are used, an add_font() call results in an error.
             class cPdf(FPDF):
                 def __init__(self, orientation, unit, format):
-                    
                     # init the base FPDF
                     super().__init__(orientation=orientation, unit=unit, format=format)
                     # define a tuple holding default font names
