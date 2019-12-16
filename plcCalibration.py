@@ -394,7 +394,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
         outputMsgp2 += 'min and max PLC counts are as follows:\n'
         outputMsgp2 += 'EU at min and max PLC Counts:  {:14.6f}   {:14.6f}\n' \
                 .format(offsetMinMax[0], offsetMinMax[1])
-        outputMsgp2 += '\n\n\nENGMfg Sign/date  ' + '_' * 50 + '\n\n\n'
+        outputMsgp2 += '\n\n\nENG Sign/date  ' + '_' * 50 + '\n\n\n'
         outputMsgp2 +='*' * 70 + '\n'
 
         # **** Write output to a pdf file if there is an output file specified
