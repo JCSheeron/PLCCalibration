@@ -122,7 +122,7 @@ not in the [] notation.\n
 actCounts and actEus are lists and should be the same length as each other.\
 """
 
-descrStr="Linear curve fit of measured calibration data (EU vs counts)."
+descrStr="Curve fit of measured calibration data (EU vs counts)."
 
 # define the type definition function for the degree argument option
 # degree must be an integer >= 1
@@ -329,7 +329,6 @@ for instr in calData:
         outputMsgp1 = '*' * 70 + '\n'
         outputMsgp1 += 'Traveler Number _____________________________________________________\n\n'
         outputMsgp1 += 'Traveler Operation(s) _______________  Traveler Page(s) _____________\n\n'
-        outputMsgp1 += docTitle + '\n\n'
         outputMsgp1 += 'Nominal and Actual Calibration Data\n'
         outputMsgp1 += InstName + '\n'
         outputMsgp1 += calDate + '\n\n'
@@ -442,7 +441,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                     else:
                         # default
                         self.set_font(self.defaultFontNames[3], 'B', 10)
-                    self.cell(20, -40, InstName + ' Calibration Data')
+                    self.cell(20, -40, docTitle)
                     self.ln(10) # line break
 
                 # define the page footer
@@ -461,13 +460,13 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                     # after the data pdf is created
                     self.cell(20, 0, 'Page ' + str(self.page_no()) + ' of 3')
 
-                # Create a function which, given a font list, 
+                # Create a function which, given a font list,
                 # returns a tuple of font names for 4 fonts:
                 # (regular mono, bold mono, regular prop, bold prop)
                 def getFontNames(self, fontList):
                     # Want to use a monospace font for the body text,
                     # so the tables look good, but a proportional spaced font
-                    # for the headings. For non-standard fonts, it cannot be 
+                    # for the headings. For non-standard fonts, it cannot be
                     # assumed they are installed. In order of preference, try
                     # source code pro, then DejaVuSansMono, then default to
                     # Courier, which comes with pyfpdf.
@@ -478,7 +477,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                     # *** Regular Mono Style
                     fontShortName= 'SourceCodePro-Regular.ttf'
                     # generator returning an iterable being accessed with next
-                    # This will return the path to the font install location 
+                    # This will return the path to the font install location
                     # if it is installed, or come back with None.
                     regularMonoName= next((font for font in fontList if fontShortName in font), None)
                     if regularMonoName is None:
@@ -487,12 +486,12 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                         fontShortName= 'DejaVuSansMono.ttf'
                         regularMonoName= next((font for font in fontList if fontShortName in font), None)
                     if regularMonoName is None:
-                        # DejaVu Sans Mono not installed. 
+                        # DejaVu Sans Mono not installed.
                         # default to Courier
                         regularMonoName= 'Courier'
                     # *** Bold Mono Style
                     fontShortName= 'SourceCodePro-Bold.ttf'
-                    # This will return the path to the font install location 
+                    # This will return the path to the font install location
                     # if it is installed, or come back with None.
                     boldMonoName= next((font for font in fontList if fontShortName in font), None)
                     if boldMonoName is None:
@@ -501,7 +500,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                         fontShortName= 'DejaVuSansMono-Bold.ttf'
                         boldMonoName= next((font for font in fontList if fontShortName in font), None)
                     if boldMonoName is None:
-                        # DejaVu Sans Mono Bold not installed. 
+                        # DejaVu Sans Mono Bold not installed.
                         # default to Courier
                         boldMonoName= 'Courier'
                     # *** Regular Proportional Style
@@ -516,7 +515,7 @@ for the adjusted counts is:\n'.format(empPolyDegree)
             # Instantiate the new class and get on with making the pdf
             # Units are in points (pt)
             pdf = cPdf(orientation = 'P', unit = 'pt', format='Letter')
-            # define the nb alias for total page numbers used in footer 
+            # define the nb alias for total page numbers used in footer
             # pdf.alias_nb_pages() # {nb} not used, as total pages is hard coded
             pdf.set_margins(54, 72, 54) # left, top, right margins (in points)
             #pdf.add_page() # use ctor params
@@ -536,8 +535,8 @@ for the adjusted counts is:\n'.format(empPolyDegree)
             #pdf.add_page() # use ctor params
             #pdf.multi_cell(w=0, h=13, txt=outputMsgp2, border=0, align='L', fill=False )
             pdf.multi_cell(w=0, h=13, txt=outputMsgp1+outputMsgp2, border=0, align='L', fill=False )
-            pdf.output(name = fnameData, dest='F') 
-        
+            pdf.output(name = fnameData, dest='F')
+
         # Output to the terminal if the -v option is used
         if args.v:
             print(outputMsgp1)
@@ -557,12 +556,12 @@ for the adjusted counts is:\n'.format(empPolyDegree)
     plt.title(InstName + '    ' + calDate, fontsize=12, fontweight='bold')
     ax.set_xlabel('counts')
     ax.set_ylabel('Engineering Units (EU)\n' + EuUnitsLabel)
-    
+
     # make additional room for the labels
     plt.subplots_adjust(left=0.18, bottom=0.18)
     # plot horizontal and vertical lines at zero
-    plt.axhline(0, color='black', linewidth = 0.5) 
-    plt.axvline(0, color='black', linewidth = 0.5) 
+    plt.axhline(0, color='black', linewidth = 0.5)
+    plt.axvline(0, color='black', linewidth = 0.5)
 
     # add the data to the plot
     # plot the measurments as points
@@ -616,11 +615,10 @@ for the adjusted counts is:\n'.format(empPolyDegree)
                     markersize=1.5, marker='^', label='error')
             ax.annotate('{:0.4G}'.format(e), xy=(c,e), xytext=(0,-8),
                         textcoords='offset points', **txStyle)
-    
 
     # Set axis limits. Extend a bit past the min/max values
     # Consider the nominal and actual when determining min/max limits.
-    # Use oomFloor and oomCeil to "auto scale" the axes, rounding up 
+    # Use oomFloor and oomCeil to "auto scale" the axes, rounding up
     # and down to the next boundry value in the same order of magnatude
     axCountsMin = oomFloor(min(minMaxCounts[0], np.amin(actCounts)))
     axCountsMax = oomCeil(max(minMaxCounts[1], np.amax(actCounts)))
@@ -641,10 +639,10 @@ for the adjusted counts is:\n'.format(empPolyDegree)
             axEuMin + (-0.04 * euRange),
             'EU='+ polyPrettyPrint(coeffs), **txStyle)
 
-    
+
     # set x and y ticks
     #
-    # create a two line x-axis labeling with the counts on the top and the 
+    # create a two line x-axis labeling with the counts on the top and the
     # percentages on the bottom
     # first get the values (counts)
     xAxVals=np.linspace(axCountsMin, axCountsMax, 5, endpoint = True)
